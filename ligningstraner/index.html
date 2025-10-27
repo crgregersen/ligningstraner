@@ -61,6 +61,7 @@ Vi følger altid de samme3 trin.
 
  <div id="codeArea">
  <button id="makeCodeBtn">Løsningskode</button>
+ <button id="tutorialBtn" class="btnSecondary" title="Hjælp / gennemgang">Hjælp</button>
  </div>
 
  </div>
@@ -210,6 +211,19 @@ Hvert skridt bliver forklaret og der laves en ny boks med den nye ligning.
  </div>
 
  <pre id="modalOutput" class="work" style="margin-top:.5rem"></pre>
+ </div>
+</div>
+
+<!-- Tooltip walkthrough overlay -->
+<div id="tourOverlay" class="tourOverlay hidden" aria-hidden="true">
+ <div id="tourBox" class="tourBox">
+ <div id="tourContent" class="tourContent"></div>
+ <div class="tourButtons">
+ <button id="tourPrevBtn" class="btnSecondary">Forrige</button>
+ <span class="spacer"></span>
+ <button id="tourCloseBtn" class="btnSecondary">Luk</button>
+ <button id="tourNextBtn">Næste</button>
+ </div>
  </div>
 </div>
 

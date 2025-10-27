@@ -510,6 +510,48 @@ pre.work{
  width: min(560px,92vw);
 }
 
+/* Walkthrough (tour) */
+.tourOverlay{
+ position:fixed;
+ inset:0;
+ background: rgba(15,23,42,.6);
+ z-index:1200;
+ display:flex;
+ align-items:flex-start;
+ justify-content:center;
+ padding:4rem 1rem 1rem; /* luft fra toppen */
+}
+.tourOverlay.hidden{ display:none; }
+.tourBox{
+ background: var(--bg-card);
+ color: var(--text-main);
+ border:1px solid var(--border-card);
+ border-radius:.75rem;
+ box-shadow: 0 20px 60px rgba(0,0,0,.35);
+ width: min(720px,92vw);
+ padding:1rem;
+}
+.tourContent{
+ white-space:pre-line;
+ font-size: .95rem;
+ line-height:1.5;
+}
+.tourButtons{
+ display:flex;
+ align-items:center;
+ gap:.5rem;
+ margin-top:.75rem;
+}
+.tourButtons .spacer{ flex:1; }
+
+/* Highlight target element with ring */
+.tourHighlight{
+ position:relative;
+ z-index:1301; /* over overlay, så den kan ses tydeligt */
+ box-shadow: 0 4px rgba(59,130,246,.7), 0 10px rgba(59,130,246,.25);
+ border-radius:.5rem;
+}
+
 @media(max-width:500px){
  html,body{padding:1rem}
  .topRow{flex-direction:column;align-items:flex-start;}

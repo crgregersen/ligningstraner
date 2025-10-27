@@ -473,7 +473,7 @@ function makeRandomEquation(){
 function setModeDesc(mode){
  if(mode === "guided"){
  modeDesc.textContent =
-"Guidet mode:\nVi følger altid de samme3 trin.\n1. Fjern x fra højre side.\n2. Fjern + tallet fra venstre side.\n3. Gør x alene.";
+"Guidet mode:\n Der er mange måder at løse en ligning på.\nI denne træner følger vi altid de samme 3 trin.\n1. Isoler x-led til venstre side.\n2. Isoler tal-led til højre side.\n3. Gør x alene.";
  } else {
  modeDesc.textContent =
 "Ekspert mode:\nDu laver selv skridt på begge sider.\nHvert skridt bliver forklaret ligesom i trin-arbejdet.\nMålet er x = tal (vises som brøk hvis nødvendigt).";
@@ -1495,4 +1495,78 @@ themeSelect.addEventListener("change", () => { applyTheme(themeSelect.value); })
  showMode(modeSelect.value);
 
  newProblem();
+})();
+
+// ===== Walkthrough (tooltip tour) =====
+(function(){
+ const tourOverlay = document.getElementById("tourOverlay");
+ const tourBox = document.getElementById("tourBox");
+ const tourContent = document.getElementById("tourContent");
+ const tourPrevBtn = document.getElementById("tourPrevBtn");
+ const tourNextBtn = document.getElementById("tourNextBtn");
+ const tourCloseBtn = document.getElementById("tourCloseBtn");
+ const tutorialBtn = document.getElementById("tutorialBtn");
+
+ const steps = [
+ { target: null, text: "Velkommen — dette er en kort gennemgang af Ligningstræneren." },
+ { target: "#modeSelect", text: "Her kan du skifte mellem Guidet og Ekspert." },
+ { target: "#eqBox", text: "Her vises den originale aktuelle ligning du arbejder med." },
+ { target: "#step1 .answerRow", text: "I trin1 justerer du x-led. Skriv et plus eller minus stykke du vil have der sker på begge sider f.eks. -2x og tryk 'Udfør trin1'." },
+ { target: "#newProblemBtn", text: "Tryk her for at få en ny ligning hvis du er færdig eller sidder fast." },
+ { target: "#makeCodeBtn", text: "Tryk her for at hente en løsningskode du kan give din lærer." }
+ ];
+ let idx =0;
+ let currentHighlighted = null;
+
+ function clearHighlight(){
+ if(currentHighlighted){
+ currentHighlighted.classList.remove("tourHighlight");
+ currentHighlighted = null;
+ }
+ }
+ function highlightTarget(sel){
+ clearHighlight();
+ if(!sel) return;
+ const el = document.querySelector(sel);
+ if(!el) return;
+ currentHighlighted = el;
+ el.classList.add("tourHighlight");
+ el.scrollIntoView({ behavior:"smooth", block:"center" });
+ }
+
+ function updateStep(){
+ const s = steps[idx];
+ tourContent.textContent = s.text;
+ highlightTarget(s.target);
+ tourPrevBtn.style.display = idx ===0 ? "none" : "";
+ tourNextBtn.textContent = idx === steps.length -1 ? "Færdig" : "Næste";
+ }
+
+ function openTour(){
+ idx =0;
+ tourOverlay.classList.remove("hidden");
+ tourOverlay.setAttribute("aria-hidden","false");
+ updateStep();
+ }
+ function closeTour(){
+ tourOverlay.classList.add("hidden");
+ tourOverlay.setAttribute("aria-hidden","true");
+ clearHighlight();
+ }
+ function next(){
+ if(idx < steps.length -1){
+ idx++;
+ updateStep();
+ } else {
+ closeTour();
+ }
+ }
+ function prev(){ if(idx >0){ idx--; updateStep(); } }
+
+ if(tutorialBtn){ tutorialBtn.addEventListener("click", openTour); }
+ tourCloseBtn.addEventListener("click", closeTour);
+ tourNextBtn.addEventListener("click", next);
+ tourPrevBtn.addEventListener("click", prev);
+ window.addEventListener("keydown", e=>{ if(e.key==="Escape" && !tourOverlay.classList.contains("hidden")) closeTour(); });
+ tourOverlay.addEventListener("click", (e)=>{ if(e.target === tourOverlay) closeTour(); });
 })();
