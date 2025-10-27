@@ -392,7 +392,7 @@ function applyTheme(themeName){
 }
 
 /* ====== app state ====== */
-let solvedCount =0;
+let solvedCount = 0;
 let currentProblemAlreadyCounted = false;
 
 /* guided-mode state */
@@ -571,6 +571,7 @@ function createExpertStepCard(currentEq){
  const card = document.createElement("div");
  card.className = "expertStepCard";
 
+ // Aktuel ligning (brøk-format)
  const eqLabel = document.createElement("div");
  eqLabel.className = "miniEqWrapLabel";
  eqLabel.textContent = "Den ligning du arbejder på nu:";
@@ -581,6 +582,7 @@ function createExpertStepCard(currentEq){
  eqNow.textContent = formatEquationFractionStyle(currentEq);
  card.appendChild(eqNow);
 
+ // input række
  const row = document.createElement("div");
  row.className = "answerRow";
 
@@ -598,6 +600,7 @@ function createExpertStepCard(currentEq){
 
  card.appendChild(row);
 
+ // fejl / forklaring / work / nextEq container
  const errorBox = document.createElement("div");
  errorBox.className = "expertError hidden";
  card.appendChild(errorBox);
@@ -639,6 +642,7 @@ function createExpertStepCard(currentEq){
  checkBtnLocal.textContent = "Check løsning";
  checkRowLocal.appendChild(checkBtnLocal);
 
+ // Ny ligning-knap ved siden af Check-knappen
  const newProbLocal = document.createElement("button");
  newProbLocal.textContent = "Ny ligning";
  newProbLocal.style.marginLeft = "0.5rem";
@@ -688,6 +692,7 @@ function createExpertStepCard(currentEq){
  justScroll(checkWrapLocal);
  });
 
+ // bind ny-ligning knappen i expert check-UI
  newProbLocal.addEventListener("click", () => {
  newProblem();
  // focus leveled depending on mode
@@ -778,8 +783,9 @@ function createExpertStepCard(currentEq){
  }
  }
 
- const beforeL = formatSide(expertEq.left);
- const beforeR = formatSide(expertEq.right);
+ // Brug brøk-stil før operationen
+ const beforeL = formatSideAfterOp(expertEq.left);
+ const beforeR = formatSideAfterOp(expertEq.right);
 
  const explainHTML = buildWorkTextWithFractions(
  beforeL,
@@ -794,9 +800,8 @@ function createExpertStepCard(currentEq){
  workBox.classList.remove("hidden");
  workBox.innerHTML = explainHTML;
 
+ // opdatér intern ligning, men IKKE topboksen (den skal vise original)
  expertEq = newEq;
-
- eqBox.textContent = formatEquationFractionStyle(expertEq);
 
  nextLabel.classList.remove("hidden");
  nextEqBox.classList.remove("hidden");
@@ -856,6 +861,7 @@ function newProblem(){
  afterStep2 = null;
  finalSolutionValue = null;
 
+ // Vis altid den oprindelige ligning i guidet mode
  eqBox.textContent = formatEquation(equation);
 
  resetGuidedUI();
@@ -870,7 +876,8 @@ function newProblem(){
  expertSolved = false;
  expertFinalValue = null;
 
- eqBox.textContent = formatEquationFractionStyle(expertEq);
+ // Vis den oprindelige ligning i topboksen og lad den forblive uændret
+ eqBox.textContent = formatEquationFractionStyle(expertOriginal);
 
  createExpertStepCard(expertEq);
  }
@@ -1443,13 +1450,15 @@ modeSelect.addEventListener("change", () => {
  if(!equation){
  newProblem();
  } else {
+ // I guidet mode vis altid den oprindelige ligning
  eqBox.textContent = formatEquation(equation);
  }
  } else {
  if(!expertEq){
  newProblem();
  } else {
- eqBox.textContent = formatEquationFractionStyle(expertEq);
+ // I ekspert-mode vis altid den oprindelige ligning i topboksen
+ eqBox.textContent = formatEquationFractionStyle(expertOriginal || expertEq);
  }
  }
 });
