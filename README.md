@@ -1,5 +1,8 @@
 # Interaktiv simpel ligningstraner
 
+Applikationen kan køres via dette link:
+https://crgregersen.github.io/ligningstraner/ligningstraner/
+
 Ideen bag denne lille applikation er at eleverne trænes interaktivt i at løse ligninger.
 
 Applikationen kan anvendes på to måder vi en dropdown i højre side:
