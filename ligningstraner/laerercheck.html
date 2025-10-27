@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lærercheck</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+ <div class="card">
+ <h1>Lærercheck</h1>
+ <p>
+ Indsæt elevens billet (den streng eleven viser). Tryk "Tjek".
+ </p>
+
+ <label for="inpTicket">Billet / reference</label>
+ <input id="inpTicket" placeholder="fx Maria:7:3a94f1c2..." />
+
+ <button id="checkBtn">Tjek</button>
+
+ <div id="resultBox" class="expertWork"></div>
+ </div>
+
+<script>
+// Denne nøgle og denne fil skal eleverne IKKE have
+const xz = "k9J2p_4f8zQ";
+
+// samme hash som i elevens træner
+function h1(q){
+ let h =0;
+ for(let i=0; i<q.length; i++){
+ h = (h*131 + q.charCodeAt(i)) %1000000007;
+ }
+ return h.toString(16);
+}
+
+function checkTicket(ticketStr){
+ const parts = ticketStr.split(":");
+ if(parts.length <3){
+ return { ok:false, reason:"Format ligner ikke navn:tal:..." };
+ }
+ const sigGiven = parts[parts.length-1];
+ const solvedGiven = parts[parts.length-2];
+ const nameGiven = parts.slice(0, parts.length-2).join(":");
+
+ const solvedNum = Number(solvedGiven);
+ if(Number.isNaN(solvedNum) || solvedNum <0){
+ return { ok:false, reason:"Antal opgaver er ikke et gyldigt tal" };
+ }
+
+ const base = nameGiven + ":" + solvedNum;
+ const expectedSig = h1(base + ":" + xz);
+
+ if(expectedSig !== sigGiven){
+ return { ok:false, reason:"Signaturen matcher ikke. Eleven har ændret navnet eller tallet" };
+ }
+
+ return {
+ ok:true,
+ name:nameGiven,
+ solved:solvedNum
+ };
+}
+
+// DOM refs
+const inpTicket = document.getElementById("inpTicket");
+const checkBtn = document.getElementById("checkBtn");
+const resultBox = document.getElementById("resultBox");
+
+function runCheck(){
+ const t = inpTicket.value.trim();
+
+ if(!t){
+ resultBox.innerHTML = '<div class="expertError">Indsæt billet først</div>';
+ return;
+ }
+
+ const res = checkTicket(t);
+
+ if(!res.ok){
+ resultBox.innerHTML = '<div class="expertError">UGYLDIG</div>\n' + res.reason;
+ return;
+ }
+
+ resultBox.innerHTML = '<div class="expertResultBox">GYLDIG</div>\n' +
+ 'Elev: ' + res.name + "\n" +
+ 'Opgaver løst korrekt: ' + res.solved;
+}
+
+checkBtn.addEventListener("click", runCheck);
+
+inpTicket.addEventListener("keydown", e => {
+ if(e.key === "Enter") runCheck();
+});
+</script>
+
+</body>
+</html>
