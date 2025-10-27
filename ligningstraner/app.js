@@ -386,7 +386,7 @@ function applyTheme(themeName){
 }
 
 /* ====== app state ====== */
-let solvedCount =0;
+let solvedCount = 0;
 let currentProblemAlreadyCounted = false;
 
 /* guided-mode state */
@@ -457,7 +457,7 @@ function makeRandomEquation(){
 function setModeDesc(mode){
  if(mode === "guided"){
  modeDesc.textContent =
-"Guidet mode:\nVi følger altid de samme3 trin.\n1. Fjern x fra højre side.\n2. Fjern + tallet fra venstre side.\n3. Gør x alene.";
+"Guidet mode:\nVi følger altid de samme 3 trin.\n1. Fjern x fra højre side.\n2. Fjern + tallet fra venstre side.\n3. Gør x alene.";
  } else {
  modeDesc.textContent =
 "Ekspert mode:\nDu laver selv skridt på begge sider.\nHvert skridt bliver forklaret ligesom i trin-arbejdet.\nMålet er x = tal (vises som brøk hvis nødvendigt).";
@@ -705,15 +705,15 @@ function createExpertStepCard(currentEq){
  let opTextHuman = "";
  let modeKind = "addsub";
 
- const tryX = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)(\d*)x$/i);
+ const tryX = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)((\d*)x)$/i);
  if(tryX){
- let signPart = tryX[1];
- let numPart = tryX[2];
+ let signPart = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)/)[1];
+ let numPart = rawTrim.replace(/\s+/g,"").match(/[0-9]+/);
  let k;
- if(numPart === ""){
+ if(!numPart){
  k = (signPart === "-") ? -1 :1;
  } else {
- k = Number(numPart);
+ k = Number(numPart[0]);
  if(signPart === "-") k = -k;
  }
  newEq = {
@@ -786,6 +786,7 @@ function createExpertStepCard(currentEq){
 
  expertEq = newEq;
 
+ // Opdater top-boksen i ekspert-mode, da "aktuel" her betyder nuværende trin
  eqBox.textContent = formatEquationFractionStyle(expertEq);
 
  nextLabel.classList.remove("hidden");
@@ -846,6 +847,7 @@ function newProblem(){
  afterStep2 = null;
  finalSolutionValue = null;
 
+ // Vis altid den oprindelige ligning i guidet mode
  eqBox.textContent = formatEquation(equation);
 
  resetGuidedUI();
@@ -916,7 +918,19 @@ function doStep1(){
  work1.classList.remove("hidden");
  exp1.classList.remove("hidden");
 
- const match = raw.match(/^([+\-]?)(\d*)x$/i);
+ // Specifik fejl: tal uden x i trin1
+ if(/^[-+]?\d+(\.\d+)?$/.test(raw)){
+ badge1.textContent = "Prøv igen";
+ badge1.className = "status warn";
+ work1.textContent = "";
+ exp1.textContent =
+ "Du skal skrive en +kx eller -kx operation, hvor k er et tal. Eksempel: -2x eller +3x.";
+ nextEq1.className = "miniEqBoxBase boxTask hidden";
+ nextEq1Label.classList.add("hidden");
+ return;
+ }
+
+ const match = raw.match(/^([+\-]?)((\d*)x)$/i);
  if(!match){
  badge1.textContent = "Prøv igen";
  badge1.className = "status warn";
@@ -929,7 +943,7 @@ function doStep1(){
  }
 
  let signPart = match[1];
- let numPart = match[2];
+ let numPart = match[2].replace(/x/i,"").replace(/^\s*$/,"");
 
  let k;
  if(numPart === ""){
@@ -1034,7 +1048,8 @@ function doStep1(){
  right: newRight
  };
 
- eqBox.textContent = formatEquation(afterStep2);
+ // Bevar top-boksen uændret i guidet mode
+ // eqBox.textContent = formatEquation(afterStep2);
 
  justScroll(checkRow);
  return;
@@ -1083,7 +1098,8 @@ function doStep1(){
  nextEq1.className = "miniEqBoxBase boxTask";
  nextEq1Label.classList.remove("hidden");
 
- eqBox.textContent = formatEquation(afterStep2);
+ // Bevar top-boksen uændret i guidet mode
+ // eqBox.textContent = formatEquation(afterStep2);
 
  focusAndScroll(inputStep3, step3Box);
  return;
@@ -1107,7 +1123,8 @@ function doStep1(){
 
  afterStep2 = null;
 
- eqBox.textContent = formatEquation(afterStep1);
+ // Bevar top-boksen uændret i guidet mode
+ // eqBox.textContent = formatEquation(afterStep1);
 
  focusAndScroll(inputStep2, step2Box);
 }
@@ -1204,7 +1221,8 @@ function doStep2(){
 
  resultBox.textContent = "Løsning: x = " + finalStr;
 
- eqBox.textContent = formatEquation(afterStep2);
+ // Bevar top-boksen uændret i guidet mode
+ // eqBox.textContent = formatEquation(afterStep2);
 
  justScroll(checkRow);
  } else {
@@ -1225,7 +1243,8 @@ function doStep2(){
  nextEq2.className = "miniEqBoxBase boxTask";
  nextEq2Label.classList.remove("hidden");
 
- eqBox.textContent = formatEquation(afterStep2);
+ // Bevar top-boksen uændret i guidet mode
+ // eqBox.textContent = formatEquation(afterStep2);
 
  focusAndScroll(inputStep3, step3Box);
  }
@@ -1405,7 +1424,8 @@ function doStep3(){
  nextEq3.className = "miniEqBoxBase boxSolution";
  nextEq3Label.classList.remove("hidden");
 
- eqBox.textContent = "x = " + finalStr;
+ // Bevar top-boksen uændret i guidet mode
+ // eqBox.textContent = "x = " + finalStr;
 
  justScroll(checkRow);
 }
@@ -1435,11 +1455,8 @@ modeSelect.addEventListener("change", () => {
  if(!equation){
  newProblem();
  } else {
- eqBox.textContent = afterStep2
- ? formatEquation(afterStep2)
- : afterStep1
- ? formatEquation(afterStep1)
- : formatEquation(equation);
+ // I guidet mode vis altid den oprindelige ligning
+ eqBox.textContent = formatEquation(equation);
  }
  } else {
  if(!expertEq){
