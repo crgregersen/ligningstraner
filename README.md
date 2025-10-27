@@ -11,3 +11,6 @@ Applikationen kan anvendes på to måder vi en dropdown i højre side:
 
 Når ligningen er løst giver applikationen mulighed for at eleven kan se og checke at løsningen er korrekt ved at applikationen indsætter løsningen i den oprindelige ligning.
 Ideen er at eleven får indsigt i hvorfor løsningen er korrekt.
+
+Eleven kan hente en løsningskode der inkluderer navn og antal ligninger løst som læreren kan checke med:
+https://crgregersen.github.io/ligningstraner/ligningstraner/laerercheck.html
