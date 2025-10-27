@@ -15,8 +15,7 @@
  <h1>Ligningstræner</h1>
  <p class="desc" id="modeDesc">
 Guidet mode:
-
-Vi følger altid de samme 3 trin.
+Vi følger altid de samme3 trin.
 1. Fjern x fra højre side.
 2. Fjern + tallet fra venstre side.
 3. Gør x alene.
@@ -61,8 +60,7 @@ Vi følger altid de samme 3 trin.
  </div>
 
  <div id="codeArea">
- <button id="makeCodeBtn">Hent billet</button>
- <div id="extraOutput" title="Din reference">Skriv først dit navn!</div>
+ <button id="makeCodeBtn">Løsningskode</button>
  </div>
 
  </div>
@@ -80,12 +78,12 @@ Vi følger altid de samme 3 trin.
  <!-- TRIN1 -->
  <section id="step1">
  <div class="sectionHead">
- <h2>Trin1: Flyt x-led til venstre side</h2>
+ <h2>Trin1: Isoler x-led til venstre side</h2>
  <div class="status" id="badge1">I gang</div>
  </div>
  <div class="hint">
-Skriv fx -2x for at trække 2x fra på begge sider
-eller +2x for at lægge 2x til på begge sider.
+Skriv fx -2x for at trække2x fra på begge sider
+eller +2x for at lægge2x til på begge sider.
 Målet er at højre side ikke har x længere.
  </div>
 
@@ -107,12 +105,12 @@ Målet er at højre side ikke har x længere.
  <!-- TRIN2 -->
  <section id="step2" class="hidden">
  <div class="sectionHead">
- <h2>Trin2: Flyt tal-led til højre side</h2>
+ <h2>Trin2: Isoler tal-led til højre side</h2>
  <div class="status" id="badge2">Låst</div>
  </div>
  <div class="hint">
 Nu skal venstre side kun være et udtryk i x, fx "k·x" (dvs. uden et tal-led).
-Skriv fx -5 for at trække 5 fra på begge sider.
+Skriv fx -5 for at trække5 fra på begge sider.
  </div>
 
  <div class="answerRow">
@@ -137,9 +135,9 @@ Skriv fx -5 for at trække 5 fra på begge sider.
  <div class="status" id="badge3">Låst</div>
  </div>
  <div class="hint">
-Hvis du har fx 4x =8 kan du enten dividere med 4
+Hvis du har fx4x =8 kan du enten dividere med4
 (/4 eller :4)
-eller gange med 0.25
+eller gange med0.25
 (*0.25).
  </div>
 
@@ -182,9 +180,9 @@ eller gange med 0.25
 Du skal selv lave lovlige skridt på begge sider indtil der står x = tal.
 Eksempler:
 -3x (læg -3x til på begge sider)
-+5 (læg 5 til på begge sider)
- /4 (divider begge sider med 4)
-*0.25 (gang begge sider med 0.25)
++5 (læg5 til på begge sider)
+ /4 (divider begge sider med4)
+*0.25 (gang begge sider med0.25)
 
 Hvert skridt bliver forklaret og der laves en ny boks med den nye ligning.
  </div>
@@ -193,6 +191,26 @@ Hvert skridt bliver forklaret og der laves en ny boks med den nye ligning.
  <div id="expertStepsWrap"></div>
  </section>
 
+</div>
+
+<!-- Løsningskode modal -->
+<div id="solutionModal" class="modalOverlay hidden" aria-hidden="true" role="dialog" aria-label="Løsningskode">
+ <div class="modalCard">
+ <h3 style="margin-top:0">Løsningskode</h3>
+ <div class="hint" style="margin-bottom:.5rem">Indtast dit navn for at hente din kode.</div>
+
+ <div class="answerRow">
+ <label for="modalName">Navn</label>
+ <input id="modalName" placeholder="Skriv dit navn" />
+ </div>
+
+ <div class="answerRow">
+ <button id="modalGenerateBtn">Hent kode</button>
+ <button id="modalCloseBtn" class="btnSecondary">Luk</button>
+ </div>
+
+ <pre id="modalOutput" class="work" style="margin-top:.5rem"></pre>
+ </div>
 </div>
 
 <script src="app.js" defer charset="utf-8"></script>

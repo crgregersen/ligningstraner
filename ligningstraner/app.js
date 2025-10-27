@@ -360,7 +360,13 @@ const themeSelect = document.getElementById("themeSelect");
 const scoreCountEl = document.getElementById("scoreCount");
 const studentNameEl = document.getElementById("studentName");
 const extraBtn = document.getElementById("makeCodeBtn");
-const extraOut = document.getElementById("extraOutput");
+
+// Modal refs
+const solutionModal = document.getElementById("solutionModal");
+const modalName = document.getElementById("modalName");
+const modalGenerateBtn = document.getElementById("modalGenerateBtn");
+const modalCloseBtn = document.getElementById("modalCloseBtn");
+const modalOutput = document.getElementById("modalOutput");
 
 /* helpers til scrolling/fokus */
 function focusAndScroll(inputEl, sectionEl){
@@ -386,7 +392,7 @@ function applyTheme(themeName){
 }
 
 /* ====== app state ====== */
-let solvedCount = 0;
+let solvedCount =0;
 let currentProblemAlreadyCounted = false;
 
 /* guided-mode state */
@@ -398,9 +404,7 @@ let finalSolutionValue = null;
 /* expert-mode state */
 let expertEq;
 let expertSolved = false;
-// ⭐ nyt: gem den oprindelige ekspert-ligning til “check løsning”
 let expertOriginal = null;
-// ⭐ nyt: gem endelig x-værdi i ekspert
 let expertFinalValue = null;
 
 /* billet hashing */
@@ -413,20 +417,32 @@ function h1(q){
  return h.toString(16);
 }
 
-function doExtra(){
- const n = studentNameEl.value.trim();
- const s = solvedCount;
-
+function buildTicket(name, solved){
+ const n = name.trim();
+ const s = solved;
  if(!n){
- extraOut.textContent = "Skriv dit navn først";
- return;
+ return { ok:false, message:"Skriv dit navn først" };
  }
-
  const p1 = n + ":" + s;
  const p2 = h1(p1 + ":" + xz);
  const out = p1 + ":" + p2;
+ return { ok:true, code: out };
+}
 
- extraOut.textContent = out;
+function openModal(){
+ solutionModal.classList.remove("hidden");
+ solutionModal.setAttribute("aria-hidden","false");
+ modalName.value = studentNameEl.value.trim();
+ modalOutput.textContent = "";
+ modalName.focus();
+}
+function closeModal(){
+ solutionModal.classList.add("hidden");
+ solutionModal.setAttribute("aria-hidden","true");
+}
+function handleGenerate(){
+ const res = buildTicket(modalName.value, solvedCount);
+ modalOutput.textContent = res.ok ? res.code : res.message;
 }
 
 function markSolvedOnce(){
@@ -457,7 +473,7 @@ function makeRandomEquation(){
 function setModeDesc(mode){
  if(mode === "guided"){
  modeDesc.textContent =
-"Guidet mode:\nVi følger altid de samme 3 trin.\n1. Fjern x fra højre side.\n2. Fjern + tallet fra venstre side.\n3. Gør x alene.";
+"Guidet mode:\nVi følger altid de samme3 trin.\n1. Fjern x fra højre side.\n2. Fjern + tallet fra venstre side.\n3. Gør x alene.";
  } else {
  modeDesc.textContent =
 "Ekspert mode:\nDu laver selv skridt på begge sider.\nHvert skridt bliver forklaret ligesom i trin-arbejdet.\nMålet er x = tal (vises som brøk hvis nødvendigt).";
@@ -544,10 +560,9 @@ function resetExpertUI(){
  expertBadge.textContent = "I gang";
  expertBadge.className = "status";
  expertSolved = false;
- expertFinalValue = null; // ⭐ nyt
- expertOriginal = null; // ⭐ nyt
+ expertFinalValue = null;
+ expertOriginal = null;
 
- // ryd alle gamle step-cards
  expertStepsWrap.innerHTML = "";
 }
 
@@ -556,7 +571,6 @@ function createExpertStepCard(currentEq){
  const card = document.createElement("div");
  card.className = "expertStepCard";
 
- // Aktuel ligning (brøk-format)
  const eqLabel = document.createElement("div");
  eqLabel.className = "miniEqWrapLabel";
  eqLabel.textContent = "Den ligning du arbejder på nu:";
@@ -567,7 +581,6 @@ function createExpertStepCard(currentEq){
  eqNow.textContent = formatEquationFractionStyle(currentEq);
  card.appendChild(eqNow);
 
- // input række
  const row = document.createElement("div");
  row.className = "answerRow";
 
@@ -585,7 +598,6 @@ function createExpertStepCard(currentEq){
 
  card.appendChild(row);
 
- // fejl / forklaring / work / nextEq container
  const errorBox = document.createElement("div");
  errorBox.className = "expertError hidden";
  card.appendChild(errorBox);
@@ -627,7 +639,6 @@ function createExpertStepCard(currentEq){
  checkBtnLocal.textContent = "Check løsning";
  checkRowLocal.appendChild(checkBtnLocal);
 
- // Ny ligning-knap ved siden af Check-knappen
  const newProbLocal = document.createElement("button");
  newProbLocal.textContent = "Ny ligning";
  newProbLocal.style.marginLeft = "0.5rem";
@@ -677,7 +688,6 @@ function createExpertStepCard(currentEq){
  justScroll(checkWrapLocal);
  });
 
- // bind ny-ligning knappen i expert check-UI
  newProbLocal.addEventListener("click", () => {
  newProblem();
  // focus leveled depending on mode
@@ -705,15 +715,15 @@ function createExpertStepCard(currentEq){
  let opTextHuman = "";
  let modeKind = "addsub";
 
- const tryX = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)((\d*)x)$/i);
+ const tryX = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)(\d*)x$/i);
  if(tryX){
- let signPart = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)/)[1];
- let numPart = rawTrim.replace(/\s+/g,"").match(/[0-9]+/);
+ let signPart = tryX[1];
+ let numPart = tryX[2];
  let k;
- if(!numPart){
+ if(numPart === ""){
  k = (signPart === "-") ? -1 :1;
  } else {
- k = Number(numPart[0]);
+ k = Number(numPart);
  if(signPart === "-") k = -k;
  }
  newEq = {
@@ -786,7 +796,6 @@ function createExpertStepCard(currentEq){
 
  expertEq = newEq;
 
- // Opdater top-boksen i ekspert-mode, da "aktuel" her betyder nuværende trin
  eqBox.textContent = formatEquationFractionStyle(expertEq);
 
  nextLabel.classList.remove("hidden");
@@ -847,7 +856,6 @@ function newProblem(){
  afterStep2 = null;
  finalSolutionValue = null;
 
- // Vis altid den oprindelige ligning i guidet mode
  eqBox.textContent = formatEquation(equation);
 
  resetGuidedUI();
@@ -918,7 +926,6 @@ function doStep1(){
  work1.classList.remove("hidden");
  exp1.classList.remove("hidden");
 
- // Specifik fejl: tal uden x i trin1
  if(/^[-+]?\d+(\.\d+)?$/.test(raw)){
  badge1.textContent = "Prøv igen";
  badge1.className = "status warn";
@@ -1048,9 +1055,6 @@ function doStep1(){
  right: newRight
  };
 
- // Bevar top-boksen uændret i guidet mode
- // eqBox.textContent = formatEquation(afterStep2);
-
  justScroll(checkRow);
  return;
  }
@@ -1098,9 +1102,6 @@ function doStep1(){
  nextEq1.className = "miniEqBoxBase boxTask";
  nextEq1Label.classList.remove("hidden");
 
- // Bevar top-boksen uændret i guidet mode
- // eqBox.textContent = formatEquation(afterStep2);
-
  focusAndScroll(inputStep3, step3Box);
  return;
  }
@@ -1122,9 +1123,6 @@ function doStep1(){
  nextEq1Label.classList.remove("hidden");
 
  afterStep2 = null;
-
- // Bevar top-boksen uændret i guidet mode
- // eqBox.textContent = formatEquation(afterStep1);
 
  focusAndScroll(inputStep2, step2Box);
 }
@@ -1221,9 +1219,6 @@ function doStep2(){
 
  resultBox.textContent = "Løsning: x = " + finalStr;
 
- // Bevar top-boksen uændret i guidet mode
- // eqBox.textContent = formatEquation(afterStep2);
-
  justScroll(checkRow);
  } else {
  step3Box.classList.remove("hidden");
@@ -1231,7 +1226,7 @@ function doStep2(){
  badge3.className = "status";
 
  inputStep3.disabled = false;
- btnStep3.disabled = false;
+ btnStep3.disabled = true;
 
  exp2.textContent =
  "Nu er der ikke længere noget + tal på venstre side.\nDer står kun k·x på venstre side.\nNu skal du gøre x alene ved at dividere eller ved at gange med et passende tal der gør koefficienten foran x til1.";
@@ -1242,9 +1237,6 @@ function doStep2(){
  formatSide(newLeft) + " = " + formatSide(newRight);
  nextEq2.className = "miniEqBoxBase boxTask";
  nextEq2Label.classList.remove("hidden");
-
- // Bevar top-boksen uændret i guidet mode
- // eqBox.textContent = formatEquation(afterStep2);
 
  focusAndScroll(inputStep3, step3Box);
  }
@@ -1424,9 +1416,6 @@ function doStep3(){
  nextEq3.className = "miniEqBoxBase boxSolution";
  nextEq3Label.classList.remove("hidden");
 
- // Bevar top-boksen uændret i guidet mode
- // eqBox.textContent = "x = " + finalStr;
-
  justScroll(checkRow);
 }
 
@@ -1435,7 +1424,6 @@ btnStep1.addEventListener("click", doStep1);
 btnStep2.addEventListener("click", doStep2);
 btnStep3.addEventListener("click", doStep3);
 checkBtn.addEventListener("click", checkSolution);
-// hvis den guidede 'Ny ligning' knap (ved siden af Check) findes, bind den
 if(newProblemAfterCheckBtn){
  newProblemAfterCheckBtn.addEventListener("click", () => {
  newProblem();
@@ -1455,7 +1443,6 @@ modeSelect.addEventListener("change", () => {
  if(!equation){
  newProblem();
  } else {
- // I guidet mode vis altid den oprindelige ligning
  eqBox.textContent = formatEquation(equation);
  }
  } else {
@@ -1475,11 +1462,15 @@ newProblemBtn.addEventListener("click", () => {
  }
 });
 
-extraBtn.addEventListener("click", doExtra);
+// Modal events
+extraBtn.addEventListener("click", openModal);
+modalCloseBtn.addEventListener("click", closeModal);
+modalGenerateBtn.addEventListener("click", handleGenerate);
+modalName.addEventListener("keydown", e => { if(e.key === "Enter") handleGenerate(); });
+solutionModal.addEventListener("click", (e) => { if(e.target === solutionModal) closeModal(); });
+window.addEventListener("keydown", (e) => { if(e.key === "Escape" && !solutionModal.classList.contains("hidden")) closeModal(); });
 
-themeSelect.addEventListener("change", () => {
- applyTheme(themeSelect.value);
-});
+themeSelect.addEventListener("change", () => { applyTheme(themeSelect.value); });
 
 (function init(){
  let savedTheme = null;

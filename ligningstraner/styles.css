@@ -33,6 +33,10 @@
  --btn-bg: #1d4ed8;
  --btn-bg-disabled: rgba(29,78,216,.4);
  --btn-text: #ffffff;
+ --btn-secondary-bg: transparent;
+ --btn-secondary-text: var(--text-main);
+ --btn-secondary-border: var(--border-card);
+ --btn-secondary-bg-hover: rgba(15,23,42,.05);
 
  /* Status badges */
  --status-bg-base: rgba(15,23,42,.05);
@@ -88,6 +92,10 @@
  --btn-bg: #38bdf8;
  --btn-bg-disabled: rgba(56,189,248,.4);
  --btn-text: #0a0f1c;
+ --btn-secondary-bg: transparent;
+ --btn-secondary-text: var(--text-main);
+ --btn-secondary-border: rgba(148,163,184,.2);
+ --btn-secondary-bg-hover: rgba(148,163,184,.12);
 
  --status-bg-base: rgba(148,163,184,.15);
  --status-border-base: rgba(148,163,184,.4);
@@ -109,7 +117,7 @@
  --box-solution-border: rgba(16,185,129,.4);
  --box-solution-text: #6ee7b7;
 
- /* Card shadow (lys lidt blødere) */
+ /* Card shadow (mørk lidt tungere) */
  --card-shadow: 0 30px 80px rgba(0,0,0,.8);
 }
 
@@ -143,8 +151,7 @@ html,body{
 }
 
 .leftHead{
- flex:11 auto;
- min-width:220px;
+ flex:1 1 220px;
 }
 
 .pickerGroupWrap{
@@ -188,7 +195,7 @@ p.desc{
  white-space: pre-line;
  font-size:.9rem;
  color:var(--text-dim);
- margin:.25rem 0;
+ margin: .25rem 0;
  max-width:70ch;
 }
 
@@ -214,30 +221,11 @@ p.desc{
  flex-direction:column;
  align-items:flex-end;
  gap: .5rem;
- flex:11 auto;
- min-width:200px;
+ flex:1 1 200px;
 }
 
-#nameWrap{
- display:flex;
- flex-wrap:wrap;
- align-items:center;
- gap: .5rem .5rem;
- font-size:.8rem;
- color:var(--text-dim);
-}
-
-#nameWrap label{
- font-size:.8rem;
- line-height:1.2;
- color:var(--text-dim);
-}
-
-#studentName{
- font-size:.9rem;
- line-height:1.2;
- padding:.4rem .5rem;
-}
+/* Skjul navn og navnefelt fra hoved-canvas */
+#nameWrap{ display:none !important; }
 
 #scoreBadge{
  font-size:.75rem;
@@ -285,6 +273,14 @@ button{
  color:var(--btn-text);
  font-weight:600;
  cursor:pointer;
+}
+button.btnSecondary{
+ background: var(--btn-secondary-bg);
+ color: var(--btn-secondary-text);
+ border:1px solid var(--btn-secondary-border);
+}
+button.btnSecondary:hover{
+ background: var(--btn-secondary-bg-hover);
 }
 button:disabled{
  opacity:.4;
@@ -370,9 +366,7 @@ pre.work{
  white-space:pre-line;
 }
 
-.hidden{
- display:none;
-}
+.hidden{ display:none; }
 
 #resultBox{
  font-size:1rem;
@@ -495,23 +489,28 @@ pre.work{
  white-space:pre-line;
 }
 
+/* Modal */
+.modalOverlay{
+ position: fixed;
+ inset:0;
+ background: rgba(0,0,0,.5);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ z-index:1000;
+}
+.modalOverlay.hidden{ display:none; }
+.modalCard{
+ background: var(--bg-card);
+ color: var(--text-main);
+ border:1px solid var(--border-card);
+ border-radius: .75rem;
+ box-shadow: var(--card-shadow);
+ padding:1rem;
+ width: min(560px,92vw);
+}
+
 @media(max-width:500px){
  html,body{padding:1rem}
- .topRow{flex-direction:column;align-items:flex-start}
- .pickerGroupWrap{align-items:flex-start}
- .pickerGroupWrap .pickerRow{align-items:flex-start}
-
- #controlBar{
- flex-direction:column;
- align-items:flex-start;
- }
- #rightControls{
- align-items:flex-start;
- }
-
- button, input, select#themeSelect, select#modeSelect{width:100%}
- .answerRow{flex-direction:column;align-items:flex-start}
- #codeArea{flex-direction:column;align-items:flex-start}
- #nameWrap{flex-direction:column;align-items:flex-start}
- #leftControls{flex-direction:column;align-items:flex-start}
+ .topRow{flex-direction:column;align-items:flex-start;}
 }
