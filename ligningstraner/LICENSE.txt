@@ -1,0 +1,5 @@
+Copyright (c) 2025 Carsten Rhod Gregersen
+All rights reserved.
+
+You may view, copy, and modify this code for personal or educational use only.
+Commercial use, redistribution, or sublicensing is prohibited without written permission.
