@@ -810,12 +810,21 @@ function createExpertStepCard(currentEq){
  opInput.disabled = true;
  opBtn.disabled = true;
 
- const solvedNow =
+ // Check for x = constant (left side is just x)
+ const solvedLeftIsX =
  almostZero(expertEq.left.constTerm) &&
  almostZero(expertEq.left.xCoeff -1);
 
+ // Check for constant = x (right side is just x)
+ const solvedRightIsX =
+ almostZero(expertEq.right.constTerm) &&
+ almostZero(expertEq.right.xCoeff -1);
+
+ const solvedNow = solvedLeftIsX || solvedRightIsX;
+
  if(solvedNow){
- const finalX = expertEq.right.constTerm;
+ // Get the final x value from the correct side
+ const finalX = solvedLeftIsX ? expertEq.right.constTerm : expertEq.left.constTerm;
  const finalStr = formatMixedNumber(finalX);
 
  solutionBox.classList.remove("hidden");
