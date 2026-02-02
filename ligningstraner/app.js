@@ -1242,7 +1242,7 @@ function doStep2(){
  badge3.className = "status";
 
  inputStep3.disabled = false;
- btnStep3.disabled = true;
+ btnStep3.disabled = false;
 
  exp2.textContent =
  "Nu er der ikke længere noget + tal på venstre side.\nDer står kun k·x på venstre side.\nNu skal du gøre x alene ved at dividere eller ved at gange med et passende tal der gør koefficienten foran x til1.";
