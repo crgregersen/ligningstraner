@@ -1,308 +1,18 @@
 
-/* ====== fælles utilities ====== */
-function randInt(min,max){
- return Math.floor(Math.random()*(max-min+1))+min;
-}
-
-function almostZero(v){
- return Math.abs(v) <1e-10;
-}
-
-function simplifySide(side){
- const xC = almostZero(side.xCoeff) ?0 : side.xCoeff;
- const cT = almostZero(side.constTerm) ?0 : side.constTerm;
- return { xCoeff: xC, constTerm: cT };
-}
-
-function gcd(a, b){
- a = Math.abs(a);
- b = Math.abs(b);
- while(b !==0){
- const t = b;
- b = a % b;
- a = t;
- }
- return a;
-}
-
-function toFraction(value, maxDen =1000){
- const rounded = Math.round(value);
- if(Math.abs(value - rounded) <1e-10){
- return { num: rounded, den:1 };
- }
-
- let bestNum =0;
- let bestDen =1;
- let bestErr = Infinity;
-
- for(let den =1; den <= maxDen; den++){
- const num = Math.round(value * den);
- const approx = num / den;
- const err = Math.abs(approx - value);
- if(err < bestErr -1e-12){
- bestErr = err;
- bestNum = num;
- bestDen = den;
- if(err <1e-10){
- break;
- }
- }
- }
-
- const g = gcd(bestNum, bestDen);
- bestNum /= g;
- bestDen /= g;
-
- return { num: bestNum, den: bestDen };
-}
-
-function formatMixedNumber(value){
- const frac = toFraction(value);
-
- const num = frac.num;
- const den = frac.den;
-
- if(den ===1){
- return num.toString();
- }
-
- const sign = num <0 ? -1 :1;
- const absNum = Math.abs(num);
-
- const whole = Math.floor(absNum / den);
- const restNum = absNum % den;
-
- if(whole ===0){
- return (sign <0 ? "-" : "") + restNum + "/" + den;
- } else {
- return (sign <0 ? "-" : "") + whole + " " + restNum + "/" + den;
- }
-}
-
-function formatCoeffTimesX(a){
- if(almostZero(a)){
- return "";
- }
- if(almostZero(a -1)){
- return "x";
- }
- if(almostZero(a +1)){
- return "-x";
- }
-
- const frac = toFraction(a);
- const num = frac.num;
- const den = frac.den;
-
- if(den ===1){
- return num.toString() + "x";
- } else {
- return (num.toString() + "/" + den.toString()) + "x";
- }
-}
-
-function formatConstWithSign(b, hasXPart){
- if(almostZero(b)){
- return "";
- }
-
- const mixed = formatMixedNumber(b);
-
- let signChar = "";
- let body = "";
- if(mixed[0] === "-"){
- signChar = "-";
- body = mixed.slice(1);
- } else {
- signChar = "+";
- body = mixed;
- }
-
- if(!hasXPart){
- return signChar === "-" ? ("- " + body) : body;
- }
-
- return " " + signChar + " " + body;
-}
-
-function formatSideAfterOp(side){
- // Brøk-venlig side som bruges i ekspert-mode og i guidet fallback
- const a = side.xCoeff;
- const b = side.constTerm;
-
- const xPart = formatCoeffTimesX(a);
- const constPart = formatConstWithSign(b, !!xPart);
-
- if(!xPart){
- return constPart === "" ? "0" : constPart;
- }
-
- return xPart + constPart;
-}
-
-function formatEquationFractionStyle(eq){
- // Brug altid brøk-stilen til at vise hele ligningen
- return formatSideAfterOp(eq.left) + " = " + formatSideAfterOp(eq.right);
-}
-
-/* mere "almindelig" formattering - brugt i guidet trin-visning der allerede findes */
-function formatSide(side){
- const a = side.xCoeff;
- const b = side.constTerm;
- let parts = [];
-
- if(!almostZero(a)){
- if(Math.abs(a) ===1){
- parts.push(a === -1 ? "-x" : "x");
- } else {
- parts.push(a + "x");
- }
- }
- if(!almostZero(b)){
- if(parts.length ===0){
- parts.push(b.toString());
- } else {
- if(b >=0){
- parts.push("+ " + b);
- } else {
- parts.push("- " + Math.abs(b));
- }
- }
- }
- if(parts.length ===0){
- return "0";
- }
- return parts.join(" ");
-}
-
-function formatEquation(eq){
- return formatSide(eq.left) + " = " + formatSide(eq.right);
-}
-
-function formatAddX(k){
- const sign = k >=0 ? "+ " : "- ";
- const absVal = Math.abs(k);
- if(absVal ===1){
- return sign + "x";
- } else {
- return sign + absVal + "x";
- }
-}
-
-function formatAddConst(v){
- const sign = v >=0 ? "+ " : "- ";
- const absVal = Math.abs(v);
- return sign + absVal;
-}
-
-function sidePlusX(side, k){
- return simplifySide({
- xCoeff: side.xCoeff + k,
- constTerm: side.constTerm
- });
-}
-function sidePlusConst(side, c){
- return simplifySide({
- xCoeff: side.xCoeff,
- constTerm: side.constTerm + c
- });
-}
-function divideSide(side, k){
- return simplifySide({
- xCoeff: side.xCoeff / k,
- constTerm: side.constTerm / k
- });
-}
-function multiplySide(side, k){
- return simplifySide({
- xCoeff: side.xCoeff * k,
- constTerm: side.constTerm * k
- });
-}
-
-function evalSide(side, xVal){
- return side.xCoeff * xVal + side.constTerm;
-}
-
-function formatSideForSubstitution(side, xStr){
- const a = side.xCoeff;
- const b = side.constTerm;
-
- let parts = [];
-
- if(!almostZero(a)){
- if(Math.abs(a) -1 <1e-10){
- if(a === -1){
- parts.push("-(" + xStr + ")");
- } else {
- parts.push("(" + xStr + ")");
- }
- } else {
- parts.push(a + "·(" + xStr + ")");
- }
- }
-
- if(!almostZero(b)){
- if(parts.length ===0){
- parts.push(b.toString());
- } else {
- if(b >=0){
- parts.push("+ " + b);
- } else {
- parts.push("- " + Math.abs(b));
- }
- }
- }
-
- if(parts.length ===0){
- return "0";
- }
- return parts.join(" ");
-}
-
-function formatWholeEquation(eq){
- return formatSide(eq.left) + " = " + formatSide(eq.right);
-}
-
-function sideCheckLine(side, xStr, valueStr){
- const substituted = formatSideForSubstitution(side, xStr);
- return substituted + " = " + valueStr;
-}
-
-function buildWorkText(beforeL, beforeR, opText, newLeft, newRight, mode){
- const lastLineIntro = (mode === "muldiv")
- ? "Efter denne operation står der:\n"
- : "Når vi samler leddene bliver det til:\n";
-
- return (
- 'du udførte flg. operation på begge sider af lighedstegnet: ' +
- '<span class="op">' + opText + '</span>\n\n' +
- 'det giver flg. ny ligning:\n' +
- beforeL + ' <span class="op">' + opText + '</span> = ' +
- beforeR + ' <span class="op">' + opText + '</span>\n' +
- lastLineIntro +
- formatSide(newLeft) + ' = ' + formatSide(newRight)
- );
-}
-
-function buildWorkTextWithFractions(beforeL,beforeR,opText,newLeft,newRight,mode){
- const leftStrFinal = formatSideAfterOp(newLeft);
- const rightStrFinal = formatSideAfterOp(newRight);
-
- const lastLineIntro = (mode === "muldiv")
- ? "Efter denne operation står der:\n"
- : "Når vi samler leddene bliver det til:\n";
-
- return (
- 'du udførte flg. operation på begge sider af lighedstegnet: ' +
- '<span class="op">' + opText + '</span>\n\n' +
- 'det giver flg. ny ligning:\n' +
- beforeL + ' <span class="op">' + opText + '</span> = ' +
- beforeR + ' <span class="op">' + opText + '</span>\n' +
- lastLineIntro +
- leftStrFinal + ' = ' + rightStrFinal
- );
-}
+import {
+ evalSide,
+ evaluateExpertOperation,
+ evaluateGuidedStep1,
+ evaluateGuidedStep2,
+ evaluateGuidedStep3,
+ formatEquation,
+ formatEquationFractionStyle,
+ formatMixedNumber,
+ formatSide,
+ formatWholeEquation,
+ makeRandomEquation,
+ sideCheckLine,
+} from "./equation-core.js";
 
 /* ====== DOM refs ====== */
 const modeSelect = document.getElementById("modeSelect");
@@ -451,23 +161,6 @@ function markSolvedOnce(){
  currentProblemAlreadyCounted = true;
  solvedCount +=1;
  scoreCountEl.textContent = solvedCount;
-}
-
-/* lav ny ligning */
-function makeRandomEquation(){
- let a = randInt(-5,5);
- while(a ===0) a = randInt(-5,5);
-
- let c = randInt(-5,5);
- while(c ===0 || c === a) c = randInt(-5,5);
-
- let bVal = randInt(-9,9);
- let dVal = randInt(-9,9);
-
- return {
- left: { xCoeff: a, constTerm: bVal },
- right: { xCoeff: c, constTerm: dVal }
- };
 }
 
 /* ====== Mode UI ====== */
@@ -710,99 +403,18 @@ function createExpertStepCard(currentEq){
 
  function runOperation(){
  if(expertSolved) return;
-
- const rawTrim = opInput.value.trim();
- if(!rawTrim){
- showError("Tomt input");
+ const stepResult = evaluateExpertOperation(expertEq, opInput.value);
+ if(!stepResult.ok){
+ showError(stepResult.errorMessage);
  return;
  }
-
- let newEq = null;
- let opTextHuman = "";
- let modeKind = "addsub";
-
- const tryX = rawTrim.replace(/\s+/g,"").match(/^([+\-]?)(\d*)x$/i);
- if(tryX){
- let signPart = tryX[1];
- let numPart = tryX[2];
- let k;
- if(numPart === ""){
- k = (signPart === "-") ? -1 :1;
- } else {
- k = Number(numPart);
- if(signPart === "-") k = -k;
- }
- newEq = {
- left: sidePlusX(expertEq.left, k),
- right: sidePlusX(expertEq.right, k)
- };
- opTextHuman = formatAddX(k);
- modeKind = "addsub";
- } else {
- const maybeNum = Number(rawTrim.replace(/\s+/g,"") );
- if(!Number.isNaN(maybeNum)){
- const c = maybeNum;
- newEq = {
- left: sidePlusConst(expertEq.left, c),
- right: sidePlusConst(expertEq.right, c)
- };
- opTextHuman = formatAddConst(c);
- modeKind = "addsub";
- } else {
- const mDiv = rawTrim.match(/^([/:])\s*(-?\d+(\.\d+)?)$/);
- if(mDiv){
- const k = Number(mDiv[2]);
- if(Number.isNaN(k) || almostZero(k)){
- showError("Du kan ikke dividere med0");
- return;
- }
- newEq = {
- left: divideSide(expertEq.left, k),
- right: divideSide(expertEq.right, k)
- };
- opTextHuman = "/ " + k;
- modeKind = "muldiv";
- } else {
- const mMul = rawTrim.match(/^\*\s*(-?\d+(\.\d+)?)$/);
- if(mMul){
- const k = Number(mMul[1]);
- if(Number.isNaN(k)){
- showError("Kun tal efter *");
- return;
- }
- newEq = {
- left: multiplySide(expertEq.left, k),
- right: multiplySide(expertEq.right, k)
- };
- opTextHuman = "* " + k;
- modeKind = "muldiv";
- } else {
- showError("Forstår ikke operationen");
- return;
- }
- }
- }
- }
-
- // Brug brøk-stil før operationen
- const beforeL = formatSideAfterOp(expertEq.left);
- const beforeR = formatSideAfterOp(expertEq.right);
-
- const explainHTML = buildWorkTextWithFractions(
- beforeL,
- beforeR,
- opTextHuman,
- newEq.left,
- newEq.right,
- modeKind
- );
 
  errorBox.classList.add("hidden");
  workBox.classList.remove("hidden");
- workBox.innerHTML = explainHTML;
+ workBox.innerHTML = stepResult.explainHTML;
 
  // opdatér intern ligning, men IKKE topboksen (den skal vise original)
- expertEq = newEq;
+ expertEq = stepResult.newEquation;
 
  nextLabel.classList.remove("hidden");
  nextEqBox.classList.remove("hidden");
@@ -811,21 +423,8 @@ function createExpertStepCard(currentEq){
  opInput.disabled = true;
  opBtn.disabled = true;
 
- // Check for x = constant (left side is just x)
- const solvedLeftIsX =
- almostZero(expertEq.left.constTerm) &&
- almostZero(expertEq.left.xCoeff -1);
-
- // Check for constant = x (right side is just x)
- const solvedRightIsX =
- almostZero(expertEq.right.constTerm) &&
- almostZero(expertEq.right.xCoeff -1);
-
- const solvedNow = solvedLeftIsX || solvedRightIsX;
-
- if(solvedNow){
- // Get the final x value from the correct side
- const finalX = solvedLeftIsX ? expertEq.right.constTerm : expertEq.left.constTerm;
+ if(stepResult.solvedInfo.solved){
+ const finalX = stepResult.solvedInfo.finalX;
  const finalStr = formatMixedNumber(finalX);
 
  solutionBox.classList.remove("hidden");
@@ -938,89 +537,31 @@ function finishWithSolution(finalX){
 }
 
 function doStep1(){
- const raw = inputStep1.value.trim().replace(/\s+/g,"");
-
  work1.classList.remove("hidden");
  exp1.classList.remove("hidden");
+ const stepResult = evaluateGuidedStep1(equation, inputStep1.value);
+ work1.innerHTML = stepResult.workText || "";
 
- if(/^[-+]?\d+(\.\d+)?$/.test(raw)){
+ if(!stepResult.ok){
  badge1.textContent = "Prøv igen";
  badge1.className = "status warn";
- work1.textContent = "";
- exp1.textContent =
- "Du skal skrive en +kx eller -kx operation, hvor k er et tal. Eksempel: -2x eller +3x.";
+ exp1.textContent = stepResult.errorMessage;
  nextEq1.className = "miniEqBoxBase boxTask hidden";
  nextEq1Label.classList.add("hidden");
  return;
  }
 
- const match = raw.match(/^([+\-]?)((\d*)x)$/i);
- if(!match){
- badge1.textContent = "Prøv igen";
- badge1.className = "status warn";
- work1.textContent = "";
- exp1.textContent =
- "Skriv noget som -2x eller +3x. Det du skriver bliver lagt til begge sider.";
- nextEq1.className = "miniEqBoxBase boxTask hidden";
- nextEq1Label.classList.add("hidden");
- return;
- }
-
- let signPart = match[1];
- let numPart = match[2].replace(/x/i,"").replace(/^\s*$/,"");
-
- let k;
- if(numPart === ""){
- k = (signPart === "-") ? -1 :1;
- } else {
- k = Number(numPart);
- if(signPart === "-") k = -k;
- }
-
- const newLeft = sidePlusX(equation.left, k);
- const newRight = sidePlusX(equation.right, k);
-
- const beforeL = formatSide(equation.left);
- const beforeR = formatSide(equation.right);
- const opText = formatAddX(k);
-
- work1.innerHTML = buildWorkTextWithFractions(
- beforeL,
- beforeR,
- opText,
- newLeft,
- newRight,
- "addsub"
- );
-
- if(!almostZero(newRight.xCoeff)){
- badge1.textContent = "Prøv igen";
- badge1.className = "status warn";
-
- exp1.textContent =
- "Målet i trin1 er at der ikke er noget x på højre side.\nDer er stadig x på højre side.\nPrøv igen.";
-
- nextEq1.className = "miniEqBoxBase boxTask hidden";
- nextEq1Label.classList.add("hidden");
- return;
- }
-
- afterStep1 = {
- left: newLeft,
- right: newRight
- };
-
- const leftIsJustX =
- almostZero(newLeft.constTerm) && almostZero(newLeft.xCoeff -1);
- const leftHasNoConst = almostZero(newLeft.constTerm);
+ const newLeft = stepResult.newEquation.left;
+ const newRight = stepResult.newEquation.right;
+ afterStep1 = stepResult.newEquation;
 
  badge1.textContent = "Godt";
  badge1.className = "status ok";
  inputStep1.disabled = true;
  btnStep1.disabled = true;
 
- if(leftIsJustX){
- const finalX = newRight.constTerm;
+ if(stepResult.status === "solved"){
+ const finalX = stepResult.finalX;
  const finalStr = formatMixedNumber(finalX);
 
  finishWithSolution(finalX);
@@ -1067,16 +608,13 @@ function doStep1(){
  nextEq1.className = "miniEqBoxBase boxSolution";
  nextEq1Label.classList.remove("hidden");
 
- afterStep2 = {
- left: newLeft,
- right: newRight
- };
+ afterStep2 = stepResult.newEquation;
 
  justScroll(checkRow);
  return;
  }
 
- if(leftHasNoConst){
+ if(stepResult.status === "advance-step3"){
  step2Box.classList.remove("hidden");
  badge2.textContent = "Færdig";
  badge2.className = "status ok";
@@ -1104,10 +642,7 @@ function doStep1(){
  inputStep3.disabled = false;
  btnStep3.disabled = false;
 
- afterStep2 = {
- left: newLeft,
- right: newRight
- };
+ afterStep2 = stepResult.newEquation;
 
  exp1.textContent =
  "Nu er der ikke længere noget x på højre side.\nVenstre side er allerede kun k·x,\nså vi hopper direkte til trin3.";
@@ -1145,46 +680,15 @@ function doStep1(){
 }
 
 function doStep2(){
- const raw = inputStep2.value.trim().replace(/\s+/g,"");
-
  work2.classList.remove("hidden");
  exp2.classList.remove("hidden");
+ const stepResult = evaluateGuidedStep2(afterStep1, inputStep2.value);
+ work2.innerHTML = stepResult.workText || "";
 
- const num = Number(raw);
- if(Number.isNaN(num)){
+ if(!stepResult.ok){
  badge2.textContent = "Prøv igen";
  badge2.className = "status warn";
- work2.textContent = "";
- exp2.textContent =
- "Skriv et tal som -5 eller +7. Det bliver lagt til begge sider.";
- nextEq2.className = "miniEqBoxBase boxTask hidden";
- nextEq2Label.classList.add("hidden");
- return;
- }
-
- const newLeft = sidePlusConst(afterStep1.left , num);
- const newRight = sidePlusConst(afterStep1.right, num);
-
- const beforeL = formatSide(afterStep1.left);
- const beforeR = formatSide(afterStep1.right);
- const opText = formatAddConst(num);
-
- work2.innerHTML = buildWorkTextWithFractions(
- beforeL,
- beforeR,
- opText,
- newLeft,
- newRight,
- "addsub"
- );
-
- if(!almostZero(newLeft.constTerm)){
- badge2.textContent = "Prøv igen";
- badge2.className = "status warn";
-
- exp2.textContent =
- "Målet i trin2 er at venstre side ikke har noget + tal tilbage.\nDer er stadig et tal på venstre side.\nPrøv igen.";
-
+ exp2.textContent = stepResult.errorMessage;
  nextEq2.className = "miniEqBoxBase boxTask hidden";
  nextEq2Label.classList.add("hidden");
  return;
@@ -1196,15 +700,12 @@ function doStep2(){
  inputStep2.disabled = true;
  btnStep2.disabled = true;
 
- afterStep2 = {
- left: newLeft,
- right: newRight
- };
+ afterStep2 = stepResult.newEquation;
+ const newLeft = stepResult.newEquation.left;
+ const newRight = stepResult.newEquation.right;
 
- const leftCoeffIs1 = almostZero(afterStep2.left.xCoeff -1);
-
- if(leftCoeffIs1){
- const finalX = afterStep2.right.constTerm;
+ if(stepResult.status === "solved"){
+ const finalX = stepResult.finalX;
  const finalStr = formatMixedNumber(finalX);
 
  finishWithSolution(finalX);
@@ -1260,142 +761,15 @@ function doStep2(){
 }
 
 function doStep3(){
- const raw = inputStep3.value.trim();
-
  work3.classList.remove("hidden");
  exp3.classList.remove("hidden");
+ const stepResult = evaluateGuidedStep3(afterStep2, inputStep3.value);
+ work3.innerHTML = stepResult.workText || "";
 
- const wrongX = raw.match(/^([/:*])\s*(-?\d+(\.\d+)?x|x|\d*x)$/i);
- if(wrongX){
+ if(!stepResult.ok){
  badge3.textContent = "Prøv igen";
  badge3.className = "status warn";
-
- work3.textContent = "";
-
- const coeff = afterStep2.left.xCoeff;
- exp3.textContent =
- "Du skrev " + raw + ".\nHer skal du kun bruge tallet foran x (altså " + coeff + ") og ikke hele '" +
- coeff + "x'.\nEksempel: /" + coeff + " eller *" + (1/coeff) + ".";
-
- nextEq3.className = "miniEqBoxBase boxTask hidden";
- nextEq3Label.classList.add("hidden");
- resultBox.textContent = "";
-
- checkBtn.disabled = true;
- checkWrap.classList.add("hidden");
- checkRow.classList.add("hidden");
- finalSolutionValue = null;
-
- return;
- }
-
- let matchDiv = raw.match(/^([/:])\s*(-?\d+(\.\d+)?)$/);
- let matchMul = null;
- let opKind = null;
-
- if(matchDiv){
- opKind = "div";
- } else {
- matchMul = raw.match(/^\*\s*(-?\d+(\.\d+)?)$/);
- if(matchMul){
- opKind = "mul";
- }
- }
-
- if(!opKind){
- badge3.textContent = "Prøv igen";
- badge3.className = "status warn";
- work3.textContent = "";
- exp3.textContent =
- "Skriv fx /4 for at dividere begge sider med4\neller *0.5 for at gange begge sider med0.5.\nHusk: du må kun bruge et tal (ingen x).";
-
- nextEq3.className = "miniEqBoxBase boxTask hidden";
- nextEq3Label.classList.add("hidden");
- resultBox.textContent = "";
-
- checkBtn.disabled = true;
- checkWrap.classList.add("hidden");
- checkRow.classList.add("hidden");
- finalSolutionValue = null;
-
- return;
- }
-
- let k;
- if(opKind === "div"){
- k = Number(matchDiv[2]);
- if(Number.isNaN(k) || almostZero(k)){
- badge3.textContent = "Prøv igen";
- badge3.className = "status warn";
- work3.textContent = "";
- exp3.textContent = "Du kan ikke dividere med0.";
-
- nextEq3.className = "miniEqBoxBase boxTask hidden";
- nextEq3Label.classList.add("hidden");
- resultBox.textContent = "";
-
- checkBtn.disabled = true;
- checkWrap.classList.add("hidden");
- checkRow.classList.add("hidden");
- finalSolutionValue = null;
-
- return;
- }
- } else {
- k = Number(matchMul[1]);
- if(Number.isNaN(k)){
- badge3.textContent = "Prøv igen";
- badge3.className = "status warn";
- work3.textContent = "";
- exp3.textContent =
- "For at gange skriver du fx *0.5 eller *-1 (kun tal).";
-
- nextEq3.className = "miniEqBoxBase boxTask hidden";
- nextEq3Label.classList.add("hidden");
- resultBox.textContent = "";
-
- checkBtn.disabled = true;
- checkWrap.classList.add("hidden");
- checkRow.classList.add("hidden");
- finalSolutionValue = null;
-
- return;
- }
- }
-
- const beforeL = formatSide(afterStep2.left);
- const beforeR = formatSide(afterStep2.right);
-
- let newLeft, newRight, opText;
- if(opKind === "div"){
- newLeft = divideSide(afterStep2.left , k);
- newRight = divideSide(afterStep2.right, k);
- opText = "/ " + k;
- } else {
- newLeft = multiplySide(afterStep2.left , k);
- newRight = multiplySide(afterStep2.right, k);
- opText = "* " + k;
- }
-
- work3.innerHTML = buildWorkTextWithFractions(
- beforeL,
- beforeR,
- opText,
- newLeft,
- newRight,
- "muldiv"
- );
-
- if(
- !almostZero(newLeft.constTerm) ||
- !almostZero(newLeft.xCoeff -1)
- ){
- badge3.textContent = "Prøv igen";
- badge3.className = "status warn";
-
- exp3.textContent =
- "Målet i trin3 er at venstre side kun skal være x.\nVenstre side er ikke kun x endnu.\nPrøv igen.";
-
+ exp3.textContent = stepResult.errorMessage;
  nextEq3.className = "miniEqBoxBase boxTask hidden";
  nextEq3Label.classList.add("hidden");
  resultBox.textContent = "";
@@ -1414,7 +788,7 @@ function doStep3(){
  inputStep3.disabled = true;
  btnStep3.disabled = true;
 
- const xValue = newRight.constTerm;
+ const xValue = stepResult.finalX;
  const finalStr = formatMixedNumber(xValue);
 
  finishWithSolution(xValue);
