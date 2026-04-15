@@ -49,6 +49,18 @@ export const expertOperationCases = [
   input: "/0",
   errorMessage: "Du kan ikke dividere med0",
  },
+ {
+  name: "expert mode rejects empty input",
+  equation: eq(2, 0, 0, 8),
+  input: "   ",
+  errorMessage: "Tomt input",
+ },
+ {
+  name: "expert mode rejects unrecognized operations",
+  equation: eq(2, 0, 0, 8),
+  input: "abc",
+  errorMessage: "Forstår ikke operationen",
+ },
 ];
 
 export const guidedStepCases = {
@@ -77,6 +89,20 @@ export const guidedStepCases = {
    status: "advance-step3",
    expectedEquation: eq(2, 0, 0, 5),
   },
+  {
+   name: "step1 rejects operations that still leave x on the right side",
+   equation: eq(2, 3, -2, 4),
+   input: "+1x",
+   ok: false,
+   errorMessage: "Målet i trin1 er at der ikke er noget x på højre side.\nDer er stadig x på højre side.\nPrøv igen.",
+  },
+  {
+   name: "step1 rejects malformed x input",
+   equation: eq(2, 3, -1, 4),
+   input: "abc",
+   ok: false,
+   errorMessage: "Skriv noget som -2x eller +3x. Det du skriver bliver lagt til begge sider.",
+  },
  ],
  step2: [
   {
@@ -96,6 +122,20 @@ export const guidedStepCases = {
    expectedEquation: eq(1, 0, 0, 1),
    finalX: 1,
   },
+  {
+   name: "step2 rejects non-numeric input",
+   equation: eq(3, 3, 0, 4),
+   input: "abc",
+   ok: false,
+   errorMessage: "Skriv et tal som -5 eller +7. Det bliver lagt til begge sider.",
+  },
+  {
+   name: "step2 rejects results that still leave a constant on the left side",
+   equation: eq(3, 3, 0, 4),
+   input: "-2",
+   ok: false,
+   errorMessage: "Målet i trin2 er at venstre side ikke har noget + tal tilbage.\nDer er stadig et tal på venstre side.\nPrøv igen.",
+  },
  ],
  step3: [
   {
@@ -114,6 +154,27 @@ export const guidedStepCases = {
    status: "solved",
    expectedEquation: eq(1, 0, 0, -5 / 3),
    finalX: -5 / 3,
+  },
+  {
+   name: "step3 rejects divide by zero",
+   equation: eq(4, 0, 0, 8),
+   input: "/0",
+   ok: false,
+   errorMessage: "Du kan ikke dividere med0.",
+  },
+  {
+   name: "step3 rejects malformed numeric operations",
+   equation: eq(4, 0, 0, 8),
+   input: "abc",
+   ok: false,
+   errorMessage: "Skriv fx /4 for at dividere begge sider med4\neller *0.5 for at gange begge sider med0.5.\nHusk: du må kun bruge et tal (ingen x).",
+  },
+  {
+   name: "step3 rejects operations that do not isolate x",
+   equation: eq(4, 0, 0, 8),
+   input: "/2",
+   ok: false,
+   errorMessage: "Målet i trin3 er at venstre side kun skal være x.\nVenstre side er ikke kun x endnu.\nPrøv igen.",
   },
  ],
 };
